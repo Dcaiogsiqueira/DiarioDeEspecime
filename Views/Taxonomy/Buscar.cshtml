@@ -1,0 +1,85 @@
+﻿@{
+    ViewData["Title"] = "Buscar Espécie";
+}
+
+<h2>Buscar Espécie</h2>
+
+<label for="speciesName">Nome científico:</label>
+<input type="text" id="speciesName" placeholder="Digite o nome científico" title="Digite o nome científico da espécie" class="form-control" />
+
+<button id="btnBuscar" class="btn btn-primary">Buscar</button>
+
+<br />
+
+<label for="reino">Reino:</label>
+<input id="reino" class="form-control" readonly placeholder="Reino" title="Reino" />
+
+<label for="filo">Filo:</label>
+<input id="filo" class="form-control" readonly placeholder="Filo" title="Filo" />
+
+<label for="classe">Classe:</label>
+<input id="classe" class="form-control" readonly placeholder="Classe" title="Classe" />
+
+<label for="ordem">Ordem:</label>
+<input id="ordem" class="form-control" readonly placeholder="Ordem" title="Ordem" />
+
+<label for="familia">Família:</label>
+<input id="familia" class="form-control" readonly placeholder="Família" title="Família" />
+
+<label for="genero">Gênero:</label>
+<input id="genero" class="form-control" readonly placeholder="Gênero" title="Gênero" />
+
+<br/>
+
+<div id="fotoEspecieContainer" style="display:none; margin-top:20px;">
+    <img id="fotoEspecie"
+         src=""
+         alt="Foto da espécie"
+         class="img-fluid"
+         style="max-width:100%; height:auto; display:block; margin-bottom:5px;" />
+    <small id="legendaFoto" class="text-muted"></small>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+               $('#btnBuscar').click(function () {
+            let nome = $('#speciesName').val();
+            $.get('/Taxonomy/BuscarPorNome', { nome: nome }, function (data) {
+                if (data.success) {
+                    $('#reino').val(data.reino);
+                    $('#filo').val(data.filo);
+                    $('#classe').val(data.classe);
+                    $('#ordem').val(data.ordem);
+                    $('#familia').val(data.familia);
+                    $('#genero').val(data.genero);
+
+                    if (data.fotos && data.fotos.medium) {
+                        let $img = $('#fotoEspecie');
+                        // Monta o srcset com os tamanhos disponíveis
+                        let srcset = '';
+                        if (data.fotos.small) srcset += `${data.fotos.small} 200w, `;
+                        if (data.fotos.medium) srcset += `${data.fotos.medium} 500w, `;
+                        if (data.fotos.large) srcset += `${data.fotos.large} 1024w, `;
+                        if (data.fotos.original) srcset += `${data.fotos.original} 2048w`;
+                        srcset = srcset.replace(/, $/, '');
+
+                        $img.attr('src', data.fotos.medium);
+                        $img.attr('srcset', srcset);
+                        $img.attr('sizes', '(max-width: 600px) 100vw, 600px');
+                        $img.show();
+
+                        $('#legendaFoto').text(data.autorImagem || '');
+                        $('#fotoEspecieContainer').show();
+                    } else {
+                        $('#fotoEspecieContainer').hide();
+                    }
+                } else {
+                    $('#fotoEspecieContainer').hide();
+                    alert("Espécie não encontrada.");
+                }
+            });
+        });
+    </script>
+}
+

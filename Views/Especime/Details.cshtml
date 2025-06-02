@@ -1,0 +1,74 @@
+﻿@model DiarioDeEspecime.Models.Especime
+
+@{
+    ViewData["Title"] = "Detalhes do Espécime";
+}
+
+<h2>Detalhes do Espécime</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h4>Informações do Espécime</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Nome Científico</dt>
+            <dd class="col-sm-9">@Model.Especie.NomeCientifico</dd>
+
+            <dt class="col-sm-3">Nome Popular</dt>
+            <dd class="col-sm-9">@Model.Especie.NomeEspecie</dd>
+
+            <dt class="col-sm-3">Gênero</dt>
+            <dd class="col-sm-9">@Model.Especie.Genero</dd>
+
+            <dt class="col-sm-3">Sexo</dt>
+            <dd class="col-sm-9">@Model.Sexo</dd>
+
+            <dt class="col-sm-3">Local de Encontro</dt>
+            <dd class="col-sm-9">@Model.LocalEncontro</dd>
+
+            <dt class="col-sm-3">Encontrado por</dt>
+            <dd class="col-sm-9">@Model.Coletor</dd>
+
+            <dt class="col-sm-3">Data e Hora do Encontro</dt>
+            <dd class="col-sm-9">@Model.DataHoraEncontro?.ToString("dd/MM/yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">Condições Climáticas</dt>
+            <dd class="col-sm-9">@Model.CondicoesClimaticas</dd>
+
+            <dt class="col-sm-3">Peso (kg)</dt>
+            <dd class="col-sm-9">@Model.Peso</dd>
+
+            <dt class="col-sm-3">Comprimento (cm)</dt>
+            <dd class="col-sm-9">@Model.Comprimento</dd>
+
+            <dt class="col-sm-3">Comportamento Observado</dt>
+            <dd class="col-sm-9">@Model.Comportamento</dd>
+
+            <dt class="col-sm-3">Análise Física</dt>
+            <dd class="col-sm-9">@Model.AnaliseFisica</dd>
+
+            <dt class="col-sm-3">Observações Adicionais</dt>
+            <dd class="col-sm-9">@Model.Observacoes</dd>
+
+            <dt class="col-sm-3">Foto do Espécime</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.FotoUrl))
+                {
+                    <img src="@Model.FotoUrl" alt="Foto do Espécime" class="img-fluid" style="max-width: 300px;" />
+                }
+                else
+                {
+                    <span class="text-muted">Nenhuma foto disponível</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Data de Cadastro</dt>
+            <dd class="col-sm-9">@Model.DataCadastro.ToString("dd/MM/yyyy HH:mm")</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+        <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+    </div>
+</div>

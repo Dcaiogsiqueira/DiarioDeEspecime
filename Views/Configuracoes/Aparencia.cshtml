@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Configurar Aparência";
+    var biomas = ViewBag.Biomas as List<DiarioDeEspecime.Models.Bioma>;
+    int? selectedBiomaId = ViewBag.BiomaId as int?;
+}
+
+<h2>Configurar Aparência</h2>
+
+<form asp-action="Aparencia" method="post">
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label for="biomaId">Bioma:</label>
+        <select id="biomaId" name="biomaId" class="form-control">
+            <option value="">Selecione um bioma</option>
+            @foreach (var bioma in biomas)
+            {
+
+                @if (selectedBiomaId == bioma.Id)
+                {
+                    <option value="@bioma.Id" selected>@bioma.Nome</option>
+                }
+                else
+                {
+                    <option value="@bioma.Id">@bioma.Nome</option>
+
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>

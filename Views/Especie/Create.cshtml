@@ -1,0 +1,132 @@
+﻿@model DiarioDeEspecime.Models.Especie
+
+@{
+    ViewData["Title"] = "Nova Espécie";
+}
+
+<h1>Nova Espécie</h1>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+    <div class="form-group">
+        <label for="nomeCientifico">Nome científico:</label>
+        <div class="input-group">
+            <input asp-for="NomeCientifico" class="form-control" id="nomeCientifico" placeholder="Digite o nome científico" />
+            <button type="button" class="btn btn-secondary" id="btnBuscar">Buscar</button>
+        </div>
+        <span asp-validation-for="NomeCientifico" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Reino"></label>
+        <input asp-for="Reino" class="form-control" id="reino" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Filo"></label>
+        <input asp-for="Filo" class="form-control" id="filo" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Classe"></label>
+        <input asp-for="Classe" class="form-control" id="classe" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Ordem"></label>
+        <input asp-for="Ordem" class="form-control" id="ordem" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Familia"></label>
+        <input asp-for="Familia" class="form-control" id="familia" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="Genero"></label>
+        <input asp-for="Genero" class="form-control" id="genero" readonly />
+    </div>
+    <div class="form-group">
+        <label asp-for="NomeEspecie"></label>
+        <input asp-for="NomeEspecie" class="form-control" id="nomeEspecie" readonly />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Descricao"></label>
+        <textarea asp-for="Descricao" class="form-control" id="descricao"></textarea>
+    </div>
+    <div class="form-group">
+        <label asp-for="Distribuicao"></label>
+        <textarea asp-for="Distribuicao" class="form-control" id="distribuicao"></textarea>
+    </div>
+
+    <div id="fotoEspecieContainer" style="display:none; margin-top:20px;">
+        <img id="fotoEspecie"
+             src=""
+             alt="Foto da espécie"
+             class="img-fluid"
+             style="max-width:100%; height:auto; display:block; margin-bottom:5px;" />
+        <small id="legendaFoto" class="text-muted"></small>
+    </div>
+
+    <input type="hidden" asp-for="FotoUrlSquare" id="FotoUrlSquare" />
+    <input type="hidden" asp-for="FotoUrlSmall" id="FotoUrlSmall" />
+    <input type="hidden" asp-for="FotoUrlMedium" id="FotoUrlMedium" />
+    <input type="hidden" asp-for="FotoUrlLarge" id="FotoUrlLarge" />
+    <input type="hidden" asp-for="FotoUrlOriginal" id="FotoUrlOriginal" />
+    <input type="hidden" asp-for="FotoAutor" id="FotoAutor" />
+
+    <div class="form-group">
+        <input type="submit" value="Salvar" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#btnBuscar').click(function () {
+            let nome = $('#nomeCientifico').val();
+            $.get('/Taxonomy/BuscarPorNome', { nome: nome }, function (data) {
+                if (data.success) {
+                    $('#nomeCientifico').val(data.nomeCientifico);
+                    $('#reino').val(data.reino);
+                    $('#filo').val(data.filo);
+                    $('#classe').val(data.classe);
+                    $('#ordem').val(data.ordem);
+                    $('#familia').val(data.familia);
+                    $('#genero').val(data.genero);
+                    $('#nomeEspecie').val(data.nomeEspecie);
+
+                    // Imagem e créditos
+                    if (data.fotos && data.fotos.medium) {
+                        let $img = $('#fotoEspecie');
+                        let srcset = '';
+                        if (data.fotos.small) srcset += `${data.fotos.small} 200w, `;
+                        if (data.fotos.medium) srcset += `${data.fotos.medium} 500w, `;
+                        if (data.fotos.large) srcset += `${data.fotos.large} 1024w, `;
+                        if (data.fotos.original) srcset += `${data.fotos.original} 2048w`;
+                        srcset = srcset.replace(/, $/, '');
+
+                        $img.attr('src', data.fotos.medium);
+                        $img.attr('srcset', srcset);
+                        $img.attr('sizes', '(max-width: 600px) 100vw, 600px');
+                        $img.show();
+
+                        $('#legendaFoto').text(data.autorImagem || '');
+                        $('#fotoEspecieContainer').show();
+
+                        // Preenche os campos hidden para salvar no banco
+                        $('#FotoUrlSquare').val(data.fotos.square || '');
+                        $('#FotoUrlSmall').val(data.fotos.small || '');
+                        $('#FotoUrlMedium').val(data.fotos.medium || '');
+                        $('#FotoUrlLarge').val(data.fotos.large || '');
+                        $('#FotoUrlOriginal').val(data.fotos.original || '');
+                        $('#FotoAutor').val(data.autorImagem || '');
+                    } else {
+                        $('#fotoEspecieContainer').hide();
+                        $('#FotoUrlSquare, #FotoUrlSmall, #FotoUrlMedium, #FotoUrlLarge, #FotoUrlOriginal, #FotoAutor').val('');
+                    }
+                } else {
+                    $('#fotoEspecieContainer').hide();
+                    alert("Espécie não encontrada.");
+                }
+            });
+        });
+    </script>
+}

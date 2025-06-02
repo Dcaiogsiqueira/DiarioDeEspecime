@@ -1,0 +1,55 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    background-color: var(--cor-clara);
+    color: var(--cor-primaria);
+}
+
+.nav-link:hover {
+    color: #007bff; /* Cor do texto ao passar o mouse */
+    text-decoration: underline; /* Adiciona sublinhado */
+    transition: color 0.3s ease; /* Animação suave */
+}
+
+.btn-circle {
+    width: 30px; /* Reduz a largura */
+    height: 30px; /* Reduz a altura */
+    padding: 4px 0; /* Ajusta o preenchimento interno */
+    border-radius: 50%; /* Mantém o formato circular */
+    text-align: center;
+    font-size: 14px; /* Reduz o tamanho da fonte */
+    line-height: 1.42857;
+    display: inline-block;
+}
+
+.navbar, .footer, .btn-primary {
+    background-color: var(--cor-primaria) !important;
+    color: var(--cor-clara) !important;
+}
+
+.btn-secondary {
+    background-color: var(--cor-secundaria) !important;
+    color: var(--cor-clara) !important;
+}
+
+a, .accent {
+    color: var(--cor-destaque) !important;
+}

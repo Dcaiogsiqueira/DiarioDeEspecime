@@ -1,0 +1,46 @@
+﻿@model DiarioDeEspecime.Models.Especie
+
+@{
+    ViewData["Title"] = "Detalhes da Espécie";
+}
+
+<h2>Detalhes da Espécie</h2>
+
+<div class="card mb-3">
+    <div class="row g-0">
+        <div class="col-md-4">
+            @if (!string.IsNullOrEmpty(Model.FotoUrlMedium))
+            {
+                <img src="@Model.FotoUrlMedium" class="img-fluid rounded-start" alt="Foto da espécie" />
+                <div class="text-center">
+                    <small class="text-muted">@Model.FotoAutor</small>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted text-center">Sem imagem disponível</p>
+            }
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h4 class="card-title">@Model.NomeCientifico</h4>
+                <p><strong>Nome da Espécie:</strong> @Model.NomeEspecie</p>
+                <p><strong>Reino:</strong> @Model.Reino</p>
+                <p><strong>Filo:</strong> @Model.Filo</p>
+                <p><strong>Classe:</strong> @Model.Classe</p>
+                <p><strong>Ordem:</strong> @Model.Ordem</p>
+                <p><strong>Família:</strong> @Model.Familia</p>
+                <p><strong>Gênero:</strong> @Model.Genero</p>
+                <p><strong>Descrição:</strong> @Model.Descricao</p>
+                <p><strong>Distribuição:</strong> @Model.Distribuicao</p>
+                <p><strong>Criador:</strong> @(Model.Criador != null ? Model.Criador.Nome + " " + Model.Criador.Sobrenome : "Desconhecido")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Excluir</a>
+    <a asp-action="Index" class="btn btn-secondary">Voltar à Lista</a>
+</p>

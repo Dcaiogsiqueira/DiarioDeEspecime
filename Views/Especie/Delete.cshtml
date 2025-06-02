@@ -1,0 +1,27 @@
+﻿@model DiarioDeEspecime.Models.Especie
+
+@{
+    ViewData["Title"] = "Excluir Espécie";
+}
+
+<h2>Excluir Espécie</h2>
+
+<div class="alert alert-danger" role="alert">
+    Tem certeza de que deseja excluir esta espécie? Esta ação não pode ser desfeita.
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h4 class="card-title">@Model.NomeCientifico</h4>
+        <p><strong>Reino:</strong> @Model.Reino</p>
+        <p><strong>Filo:</strong> @Model.Filo</p>
+        <p><strong>Classe:</strong> @Model.Classe</p>
+        <p><strong>Família:</strong> @Model.Familia</p>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Excluir</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

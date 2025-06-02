@@ -1,0 +1,100 @@
+﻿@model DiarioDeEspecime.Models.Especime
+
+@{
+    ViewData["Title"] = "Editar Espécime";
+}
+
+<h2>Editar Espécime</h2>
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+<div class="row">
+    <div class="col-md-8">
+        @using (Html.BeginForm("Edit", "Especime", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.EspecieId, "Espécie")
+                @Html.DropDownListFor(m => m.EspecieId, new SelectList(ViewBag.Especies, "Id", "NomeCientifico", Model.EspecieId), "Selecione", new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.EspecieId, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Sexo)
+                @Html.DropDownListFor(m => m.Sexo, new SelectList(new[] { "Macho", "Fêmea", "Indeterminado" }, Model.Sexo), "Selecione", new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Sexo, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.LocalEncontro)
+                @Html.TextBoxFor(m => m.LocalEncontro, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.LocalEncontro, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Coletor)
+                @Html.TextBoxFor(m => m.Coletor, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Coletor, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.DataHoraEncontro)
+                @Html.TextBoxFor(m => m.DataHoraEncontro, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+                @Html.ValidationMessageFor(m => m.DataHoraEncontro, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.CondicoesClimaticas)
+                @Html.TextBoxFor(m => m.CondicoesClimaticas, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.CondicoesClimaticas, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Peso)
+                @Html.TextBoxFor(m => m.Peso, new { @class = "form-control", type = "number", step = "0.01" })
+                @Html.ValidationMessageFor(m => m.Peso, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Comprimento)
+                @Html.TextBoxFor(m => m.Comprimento, new { @class = "form-control", type = "number", step = "0.01" })
+                @Html.ValidationMessageFor(m => m.Comprimento, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Comportamento)
+                @Html.TextAreaFor(m => m.Comportamento, new { @class = "form-control", rows = 2 })
+                @Html.ValidationMessageFor(m => m.Comportamento, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.AnaliseFisica)
+                @Html.TextAreaFor(m => m.AnaliseFisica, new { @class = "form-control", rows = 2 })
+                @Html.ValidationMessageFor(m => m.AnaliseFisica, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.Observacoes)
+                @Html.TextAreaFor(m => m.Observacoes, new { @class = "form-control", rows = 2 })
+                @Html.ValidationMessageFor(m => m.Observacoes, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(m => m.FotoUrl)
+                @Html.TextBoxFor(m => m.FotoUrl, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.FotoUrl, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
