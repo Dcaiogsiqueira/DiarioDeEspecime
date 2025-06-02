@@ -68,8 +68,11 @@ namespace DiarioDeEspecime.Models
         public string CriadorId { get; set; } 
         public Usuario Criador { get; set; } 
 
-      [Display(Name = "Data de Cadastro")]
+        [Display(Name = "Data de Cadastro")]
         public DateTime DataCadastro { get; set; } = DateTime.Now;
+
+        public int ProjetoId { get; set; }
+        public Projeto Projeto { get; set; }
 
     }
 }

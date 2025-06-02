@@ -65,11 +65,16 @@ namespace DiarioDeEspecime.Controllers
         }
 
         // 3. Listagem com busca, filtro e ordenação
-        public async Task<IActionResult> Index(string search, string genero, string sortOrder)
+        public async Task<IActionResult> Index(string search, string genero, string sortOrder, int? projetoId)
         {
             var especimes = _context.Especimes
                 .Include(e => e.Especie)
                 .AsQueryable();
+
+            if (projetoId.HasValue)
+            {
+                especimes = especimes.Where(e => e.ProjetoId == projetoId.Value);
+            }
 
             if (!string.IsNullOrEmpty(search))
             {

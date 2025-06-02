@@ -27,6 +27,15 @@
         <dd class="col-sm-9">@Model.Status</dd>
     </dl>
 </div>
+<div class="mb-3">
+    <a asp-controller="Especie" asp-action="Index" class="btn btn-outline-primary">
+        <i class="fas fa-leaf"></i> Ver Espécies
+    </a>
+    <a asp-controller="Especime" asp-action="Index" asp-route-projetoId="@Model.Id" class="btn btn-outline-success">
+        <i class="fas fa-dna"></i> Ver Espécimes do Projeto
+    </a>
+</div>
+
 
 @if (regraUsuario == DiarioDeEspecime.Models.RegraProjeto.Criador)
 {
