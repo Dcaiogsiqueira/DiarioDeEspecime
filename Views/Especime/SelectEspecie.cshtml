@@ -2,12 +2,14 @@
 
 @{
     ViewData["Title"] = "Selecionar Espécie";
+    var projetoId = Context.Request.Query["projetoId"];
 }
 
 <h2>Selecionar Espécie</h2>
 
 <div class="mb-3">
     <form method="get" class="row g-3">
+        <input type="hidden" name="projetoId" value="@projetoId" />
         <div class="col-md-6">
             <input type="text" name="search" class="form-control" placeholder="Buscar por nome popular, nome científico ou gênero" />
         </div>
@@ -15,7 +17,7 @@
             <button type="submit" class="btn btn-primary">Buscar</button>
         </div>
         <div class="col-md-2">
-            <a asp-action="Create" asp-controller="Especie" asp-route-returnUrl="@Url.Action("SelectEspecie", "Especime")" class="btn btn-success">Nova Espécie</a>
+            <a asp-action="Create" asp-controller="Especime" asp-route-returnUrl="@Url.Action("SelectEspecie", "Especime")" class="btn btn-success">Nova Espécie</a>
         </div>
     </form>
 </div>
@@ -39,7 +41,13 @@
                     <td>@especie.NomeEspecie</td>
                     <td>@especie.Genero</td>
                     <td>
-                        <a asp-action="Create" asp-route-especieId="@especie.Id" class="btn btn-success">Selecionar</a>
+                        <a asp-action="Create"
+                           asp-controller="Especime"
+                           asp-route-especieId="@especie.Id"
+                           asp-route-projetoId="@projetoId"
+                           class="btn btn-primary">
+                            Selecionar
+                        </a>
                     </td>
                 </tr>
             }

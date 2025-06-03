@@ -1,0 +1,40 @@
+﻿@model IEnumerable<DiarioDeEspecime.Models.UsuarioProjeto>
+@{
+    ViewData["Title"] = "Usuários do Projeto";
+    var projetoId = ViewBag.ProjetoId;
+}
+
+<h2>Usuários do Projeto</h2>
+
+<form method="get">
+    <input type="hidden" name="projetoId" value="@projetoId" />
+    <input type="text" name="search" placeholder="Buscar usuário..." />
+    <button type="submit">Buscar</button>
+</form>
+
+<p>
+    <a asp-action="Create" asp-route-projetoId="@projetoId" class="btn btn-primary">Adicionar Usuário</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Usuário</th>
+            <th>Regra</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var up in Model)
+        {
+            <tr>
+                <td>@up.Usuario?.UserName</td>
+                <td>@up.Regra</td>
+                <td>
+                    <a asp-action="Edit" asp-route-projetoId="@up.ProjetoId" asp-route-usuarioId="@up.UsuarioId">Editar</a> |
+                    <a asp-action="Delete" asp-route-projetoId="@up.ProjetoId" asp-route-usuarioId="@up.UsuarioId">Excluir</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

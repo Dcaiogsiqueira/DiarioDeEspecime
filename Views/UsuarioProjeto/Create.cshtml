@@ -1,0 +1,143 @@
+﻿@model DiarioDeEspecime.Models.UsuarioProjeto
+
+@{
+    ViewData["Title"] = "Adicionar Usuário ao Projeto";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Create">
+    <input type="hidden" asp-for="ProjetoId" />
+    <input type="hidden" asp-for="UsuarioId" />
+
+    <div id="buscaUsuarioContainer" class="form-group">
+        <label for="buscarUsuario">Buscar Usuário (Nome de Usuário ou Email):</label>
+        <input type="text" id="buscarUsuario" class="form-control" placeholder="Digite o nome de usuário ou email..." />
+        <small class="form-text text-muted">Digite para filtrar a lista de usuários.</small>
+    </div>
+
+    <div id="listaUsuariosContainer" class="form-group">
+        <label>Lista de Usuários:</label>
+        <ul id="listaUsuarios" class="list-group" style="max-height: 200px; overflow-y: auto;">
+            <!-- Os usuários serão carregados dinamicamente aqui -->
+        </ul>
+    </div>
+
+    <div id="usuarioSelecionadoContainer" class="form-group" style="display: none;">
+        <label>Usuário Selecionado:</label>
+        <ul id="usuarioSelecionado" class="list-group">
+            <!-- O usuário selecionado será exibido aqui -->
+        </ul>
+        <button type="button" id="desfazerSelecao" class="btn btn-warning mt-2">Desfazer Seleção</button>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Regra">Regra no Projeto:</label>
+        <select asp-for="Regra" class="form-control" asp-items="Html.GetEnumSelectList<DiarioDeEspecime.Models.RegraProjeto>()"></select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Adicionar</button>
+    <a asp-action="Index" asp-route-projetoId="@Model.ProjetoId" class="btn btn-secondary">Voltar</a>
+</form>
+
+@section Scripts {
+    <script>
+        const buscarUsuarioInput = document.getElementById('buscarUsuario');
+        const listaUsuarios = document.getElementById('listaUsuarios');
+        const usuarioIdInput = document.querySelector('input[name="UsuarioId"]');
+        const buscaUsuarioContainer = document.getElementById('buscaUsuarioContainer');
+        const listaUsuariosContainer = document.getElementById('listaUsuariosContainer');
+        const usuarioSelecionadoContainer = document.getElementById('usuarioSelecionadoContainer');
+        const usuarioSelecionado = document.getElementById('usuarioSelecionado');
+        const desfazerSelecaoButton = document.getElementById('desfazerSelecao');
+        let usuarios = []; // Lista de todos os usuários carregados
+        let usuarioSelecionadoId = null; // Armazena o ID do usuário selecionado
+
+        // Função para carregar todos os usuários ao carregar a página
+        function carregarUsuarios() {
+            fetch('/UsuarioProjeto/BuscarUsuarios?termo=')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        usuarios = data.data; // Armazena todos os usuários
+                        atualizarListaUsuarios(usuarios); // Exibe todos os usuários inicialmente
+                    } else {
+                        listaUsuarios.innerHTML = '<li class="list-group-item text-danger">Erro ao carregar usuários.</li>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar usuários:', error);
+                    listaUsuarios.innerHTML = '<li class="list-group-item text-danger">Erro ao carregar usuários.</li>';
+                });
+        }
+
+        // Função para atualizar a lista de usuários com base no termo de busca
+        function atualizarListaUsuarios(usuariosFiltrados) {
+            listaUsuarios.innerHTML = ''; // Limpa a lista antes de adicionar novos itens
+
+            if (usuariosFiltrados.length > 0) {
+                usuariosFiltrados.forEach(usuario => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item');
+                    li.textContent = `${usuario.nome} ${usuario.sobrenome} (${usuario.email})`;
+                    li.dataset.userId = usuario.id;
+
+                    // Adiciona o evento de duplo clique para selecionar o usuário
+                    li.addEventListener('dblclick', function () {
+                        selecionarUsuario(usuario);
+                    });
+
+                    listaUsuarios.appendChild(li);
+                });
+            } else {
+                listaUsuarios.innerHTML = '<li class="list-group-item text-danger">Nenhum usuário encontrado.</li>';
+            }
+        }
+
+        // Função para selecionar um usuário
+        function selecionarUsuario(usuario) {
+            usuarioSelecionadoId = usuario.id;
+            usuarioIdInput.value = usuario.id;
+
+            // Atualiza a interface
+            buscaUsuarioContainer.style.display = 'none';
+            listaUsuariosContainer.style.display = 'none';
+            usuarioSelecionadoContainer.style.display = 'block';
+
+            // Exibe o usuário selecionado
+            usuarioSelecionado.innerHTML = '';
+            const li = document.createElement('li');
+            li.classList.add('list-group-item', 'list-group-item-success');
+            li.textContent = `${usuario.nome} ${usuario.sobrenome} (${usuario.email})`;
+            usuarioSelecionado.appendChild(li);
+        }
+
+        // Função para desfazer a seleção do usuário
+        desfazerSelecaoButton.addEventListener('click', function () {
+            usuarioSelecionadoId = null;
+            usuarioIdInput.value = '';
+
+            // Atualiza a interface
+            buscaUsuarioContainer.style.display = 'block';
+            listaUsuariosContainer.style.display = 'block';
+            usuarioSelecionadoContainer.style.display = 'none';
+
+            // Recarrega a lista de usuários
+            atualizarListaUsuarios(usuarios);
+        });
+
+        // Evento para filtrar a lista de usuários conforme o texto digitado
+        buscarUsuarioInput.addEventListener('input', function () {
+            const termo = this.value.toLowerCase();
+            const usuariosFiltrados = usuarios.filter(usuario =>
+                usuario.nome.toLowerCase().includes(termo) ||
+                usuario.sobrenome.toLowerCase().includes(termo) ||
+                usuario.email.toLowerCase().includes(termo)
+            );
+            atualizarListaUsuarios(usuariosFiltrados);
+        });
+
+        // Carrega todos os usuários ao carregar a página
+        carregarUsuarios();
+    </script>
+}

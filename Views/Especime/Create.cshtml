@@ -13,6 +13,7 @@
         @using (Html.BeginForm("Create", "Especime", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
         {
             @Html.AntiForgeryToken()
+            @Html.HiddenFor(model => model.ProjetoId)
             @Html.HiddenFor(model => model.EspecieId)
 
             <div class="form-group mb-2">

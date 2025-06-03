@@ -32,9 +32,9 @@ namespace DiarioDeEspecime.Controllers
 
         // 2. Criação do Espécime (segundo passo)
         // GET: Especime/Create
-        public async Task<IActionResult> Create(int? especieId)
+        public async Task<IActionResult> Create(int? especieId, int? projetoId)
         {
-            if (especieId == null)
+            if (especieId == null || projetoId == null)
                 return RedirectToAction(nameof(SelectEspecie));
 
             var especie = await _context.Especies.FindAsync(especieId);
@@ -42,9 +42,10 @@ namespace DiarioDeEspecime.Controllers
                 return RedirectToAction(nameof(SelectEspecie));
 
             ViewBag.EspecieNome = especie.NomeCientifico;
-            var especime = new Especime { EspecieId = especie.Id };
+            var especime = new Especime { EspecieId = especie.Id, ProjetoId = projetoId.Value };
             return View(especime);
         }
+
 
         // POST: Especime/Create
         [HttpPost]
