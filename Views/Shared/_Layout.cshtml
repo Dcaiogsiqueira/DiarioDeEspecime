@@ -45,12 +45,15 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Index"><i class="fas fa-home"></i>Home</a>
                         </li>
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Projeto" asp-action="Index">Projeto</a>
+                                <a class="nav-link" asp-area="" asp-controller="Projeto" asp-action="Index"><i class="fas fa-folder-open"></i>Projeto</a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-controller="Especime" asp-action="Index" class="nav-link"> <i class="fas fa-dna"></i>   Meus Espécimes</a>
                             </li>
                         }
                     </ul>
@@ -58,21 +61,22 @@
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a asp-controller="Configuracoes" asp-action="Index" class="nav-link ">Configurações</a>
+                                <a asp-controller="Configuracoes" asp-action="Index" class="nav-link "> <i class="fas fa-sliders-h"></i>Configurações</a>
                             </li>
                             <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="nav-link btn btn-link  p-0">Deslogar</button>
-                                </form>
+                                <a href="javascript:void(0);" class="nav-link" onclick="document.getElementById('logoutForm').submit();">
+                                    <i class="fas fa-sign-out-alt"></i> Deslogar
+                                </a>
+                                <form id="logoutForm" asp-controller="Account" asp-action="Logout" method="post" class="d-none"></form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a asp-controller="Usuario" asp-action="Create" class="nav-link ">Registrar</a>
+                                <a asp-controller="Usuario" asp-action="Create" class="nav-link "> <i class="fas fa-user-plus"></i>Registrar</a>
                             </li>
                             <li class="nav-item">
-                                <a asp-controller="Account" asp-action="Login" class="nav-link ">Logar</a>
+                                <a asp-controller="Account" asp-action="Login" class="nav-link "><i class="fas fa-sign-in-alt"></i>Logar</a>
                             </li>
                         }
                     </ul>

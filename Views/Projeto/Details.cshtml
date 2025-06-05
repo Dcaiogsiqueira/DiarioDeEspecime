@@ -31,7 +31,7 @@
     <a asp-controller="Especie" asp-action="Index" class="btn btn-outline-primary">
         <i class="fas fa-leaf"></i> Ver Espécies
     </a>
-    <a asp-controller="Especime" asp-action="SelectEspecie" asp-route-projetoId="@Model.Id" class="btn btn-outline-success">
+    <a asp-controller="Especime" asp-action="Index" asp-route-projetoId="@Model.Id" class="btn btn-outline-primary">
         <i class="fas fa-dna"></i> Ver Espécimes do Projeto
     </a>
     @if (regraUsuario == DiarioDeEspecime.Models.RegraProjeto.Criador)

@@ -1,10 +1,14 @@
 ﻿using DiarioDeEspecime.Data;
 using DiarioDeEspecime.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace DiarioDeEspecime.Controllers
 {
+    [Authorize]
     public class EspecimeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -14,123 +18,207 @@ namespace DiarioDeEspecime.Controllers
             _context = context;
         }
 
-        // 1. Seleção de Espécie (primeiro passo)
-        public async Task<IActionResult> SelectEspecie(string search)
+        // GET: Especime
+        public async Task<IActionResult> Index(string search,string creatorId,int? projetoId,string sortOrder)
         {
-            var especies = _context.Especies.AsQueryable();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (!string.IsNullOrEmpty(search))
+            // Base query: all especimes for the current user (home) or all especimes of the project (project details)
+            IQueryable<Especime> query = _context.Especimes
+                .Include(e => e.Especie)
+                .Include(e => e.Projeto)
+                .Include(e => e.Criador);
+
+            if (projetoId.HasValue)
             {
-                especies = especies.Where(e =>
-                    e.NomeCientifico.Contains(search) ||
-                    e.NomeEspecie.Contains(search) ||
-                    e.Genero.Contains(search));
+                // Project context: show all especimes of the project, regardless of user
+                query = query.Where(e => e.ProjetoId == projetoId.Value);
+            }
+            else
+            {
+                // Home context: show only especimes created by the user
+                query = query.Where(e => e.CriadorId == userId);
             }
 
-            return View(await especies.ToListAsync());
+            // Filtering by search (local, espécie, coletor)
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(e =>
+                    (e.LocalEncontro != null && e.LocalEncontro.Contains(search)) ||
+                    (e.Especie != null && e.Especie.NomeCientifico.Contains(search)) ||
+                    (e.Coletor != null && e.Coletor.Contains(search))
+                );
+            }
+
+            // Filtering by creator
+            if (!string.IsNullOrEmpty(creatorId))
+            {
+                query = query.Where(e => e.CriadorId == creatorId);
+            }
+
+            // Sorting
+            switch (sortOrder)
+            {
+                case "inicio_asc":
+                    query = query.OrderBy(e => e.DataCadastro);
+                    break;
+                case "inicio_desc":
+                    query = query.OrderByDescending(e => e.DataCadastro);
+                    break;
+                case "termino_asc":
+                    query = query.OrderBy(e => e.DataHoraEncontro);
+                    break;
+                case "termino_desc":
+                    query = query.OrderByDescending(e => e.DataHoraEncontro);
+                    break;
+                default:
+                    query = query.OrderByDescending(e => e.DataCadastro);
+                    break;
+            }
+
+            // Populate dropdowns
+            var creators = await query
+                .Select(e => e.Criador)
+                .Where(u => u != null)
+                .Distinct()
+                .ToListAsync();
+
+            var projetos = await _context.Projetos
+                .Where(p => p.UsuariosProjeto.Any(up => up.UsuarioId == userId))
+                .ToListAsync();
+
+            // Set ViewBag for dropdowns and current selections
+            ViewBag.CurrentFilter = search;
+            ViewBag.CurrentCreator = creatorId;
+            ViewBag.CurrentSort = sortOrder;
+            ViewBag.Creators = creators;
+            ViewBag.CurrentProjetoId = projetoId;
+            ViewBag.Projetos = projetos;
+
+            return View(await query.ToListAsync());
         }
 
-        // 2. Criação do Espécime (segundo passo)
-        // GET: Especime/Create
+
         public async Task<IActionResult> Create(int? especieId, int? projetoId)
         {
-            if (especieId == null || projetoId == null)
-                return RedirectToAction(nameof(SelectEspecie));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (especieId == null)
+                return RedirectToAction("SelectEspecie", new { projetoId });
 
             var especie = await _context.Especies.FindAsync(especieId);
-            if (especie == null)
-                return RedirectToAction(nameof(SelectEspecie));
 
-            ViewBag.EspecieNome = especie.NomeCientifico;
-            var especime = new Especime { EspecieId = especie.Id, ProjetoId = projetoId.Value };
+            ViewData["EspecieId"] = new SelectList(_context.Especies, "Id", "NomeCientifico", especieId);
+
+            if (projetoId.HasValue)
+            {
+                ViewData["ProjetoId"] = new SelectList(
+                    _context.Projetos.Where(p => p.Id == projetoId.Value),
+                    "Id", "Nome", projetoId.Value
+                );
+                ViewBag.ProjetoFixo = true;
+            }
+            else
+            {
+                // Busca projetos do usuário
+                var projetos = await _context.UsuarioProjeto
+                    .Where(up => up.UsuarioId == userId)
+                    .Include(up => up.Projeto)
+                    .Select(up => up.Projeto)
+                    .ToListAsync();
+
+                // Adiciona a opção "Sem Projeto"
+                projetos.Insert(0, new DiarioDeEspecime.Models.Projeto { Id = 0, Nome = "Sem Projeto" });
+
+                ViewData["ProjetoId"] = new SelectList(projetos, "Id", "Nome");
+                ViewBag.ProjetoFixo = false;
+            }
+
+            var especime = new DiarioDeEspecime.Models.Especime
+            {
+                EspecieId = especieId.Value,
+                ProjetoId = projetoId
+            };
+
+            ViewBag.EspecieNome = especie?.NomeCientifico;
+
             return View(especime);
         }
+
 
 
         // POST: Especime/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Especime especime)
+        [ActionName("Create")]
+        public async Task<IActionResult> CreatePost(Especime especime)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            especime.CriadorId = userId;
+            especime.DataCadastro = DateTime.Now;
+
+            if (especime.ProjetoId == 0)
+                especime.ProjetoId = null;
+
             if (ModelState.IsValid)
             {
                 _context.Add(especime);
                 await _context.SaveChangesAsync();
+                if (especime.ProjetoId.HasValue)
+                    return RedirectToAction(nameof(Index), new { projetoId = especime.ProjetoId });
                 return RedirectToAction(nameof(Index));
             }
 
-            // Preenche o nome da espécie para exibir novamente em caso de erro
-            var especie = await _context.Especies.FindAsync(especime.EspecieId);
-            ViewBag.EspecieNome = especie?.NomeCientifico;
-            return View(especime);
-        }
+            // Se houver erro, recarrega selects
+            ViewData["EspecieId"] = new SelectList(_context.Especies, "Id", "NomeCientifico", especime.EspecieId);
 
-        // 3. Listagem com busca, filtro e ordenação
-        public async Task<IActionResult> Index(string search, string genero, string sortOrder, int? projetoId)
-        {
-            var especimes = _context.Especimes
-                .Include(e => e.Especie)
-                .AsQueryable();
-
-            if (projetoId.HasValue)
+            if (especime.ProjetoId.HasValue)
             {
-                especimes = especimes.Where(e => e.ProjetoId == projetoId.Value);
+                ViewData["ProjetoId"] = new SelectList(_context.Projetos.Where(p => p.Id == especime.ProjetoId.Value), "Id", "Nome", especime.ProjetoId);
+                ViewBag.ProjetoFixo = true;
             }
-
-            if (!string.IsNullOrEmpty(search))
+            else
             {
-                especimes = especimes.Where(e =>
-                    e.Especie.NomeCientifico.Contains(search) ||
-                    e.Especie.NomeEspecie.Contains(search) ||
-                    e.LocalEncontro.Contains(search) ||
-                    e.Coletor.Contains(search) ||
-                    e.Especie.Genero.Contains(search));
+                var projetos = await _context.UsuarioProjeto
+                    .Where(up => up.UsuarioId == userId)
+                    .Select(up => up.Projeto)
+                    .ToListAsync();
+                ViewData["ProjetoId"] = new SelectList(projetos, "Id", "Nome");
+                ViewBag.ProjetoFixo = false;
             }
-
-            if (!string.IsNullOrEmpty(genero))
-            {
-                especimes = especimes.Where(e => e.Sexo == genero);
-            }
-
-            especimes = sortOrder switch
-            {
-                "asc" => especimes.OrderBy(e => e.Especie.NomeCientifico),
-                "desc" => especimes.OrderByDescending(e => e.Especie.NomeCientifico),
-                _ => especimes
-            };
-
-            return View(await especimes.ToListAsync());
-        }
-
-        // 4. Detalhes
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-                return NotFound();
-
-            var especime = await _context.Especimes
-                .Include(e => e.Especie)
-                .FirstOrDefaultAsync(e => e.Id == id);
-
-            if (especime == null)
-                return NotFound();
 
             return View(especime);
         }
 
-        // 5. Edição
+
         // GET: Especime/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var especime = await _context.Especimes.FindAsync(id);
-            if (especime == null)
+
+            if (especime == null || especime.CriadorId != userId)
                 return NotFound();
 
-            var especie = await _context.Especies.FindAsync(especime.EspecieId);
-            ViewBag.EspecieNome = especie?.NomeCientifico;
+            ViewData["EspecieId"] = new SelectList(_context.Especies, "Id", "NomeCientifico", especime.EspecieId);
+
+            if (especime.ProjetoId.HasValue)
+            {
+                ViewData["ProjetoId"] = new SelectList(_context.Projetos.Where(p => p.Id == especime.ProjetoId.Value), "Id", "Nome", especime.ProjetoId);
+                ViewBag.ProjetoFixo = true;
+            }
+            else
+            {
+                var projetos = await _context.UsuarioProjeto
+                    .Where(up => up.UsuarioId == userId)
+                    .Select(up => up.Projeto)
+                    .ToListAsync();
+                ViewData["ProjetoId"] = new SelectList(projetos, "Id", "Nome");
+                ViewBag.ProjetoFixo = false;
+            }
+
             return View(especime);
         }
 
@@ -139,41 +227,64 @@ namespace DiarioDeEspecime.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Especime especime)
         {
-            if (id != especime.Id)
+            if (id != especime.Id) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var especimeDb = await _context.Especimes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id && e.CriadorId == userId);
+
+            if (especimeDb == null)
                 return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    especime.CriadorId = userId;
+                    especime.DataCadastro = especimeDb.DataCadastro; // preserve original
                     _context.Update(especime);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!await EspecimeExists(especime.Id))
+                    if (!_context.Especimes.Any(e => e.Id == especime.Id && e.CriadorId == userId))
                         return NotFound();
-                    else
-                        throw;
+                    throw;
                 }
+                if (especime.ProjetoId.HasValue)
+                    return RedirectToAction(nameof(Index), new { projetoId = especime.ProjetoId });
                 return RedirectToAction(nameof(Index));
             }
 
-            var especie = await _context.Especies.FindAsync(especime.EspecieId);
-            ViewBag.EspecieNome = especie?.NomeCientifico;
+            ViewData["EspecieId"] = new SelectList(_context.Especies, "Id", "NomeCientifico", especime.EspecieId);
+
+            if (especime.ProjetoId.HasValue)
+            {
+                ViewData["ProjetoId"] = new SelectList(_context.Projetos.Where(p => p.Id == especime.ProjetoId.Value), "Id", "Nome", especime.ProjetoId);
+                ViewBag.ProjetoFixo = true;
+            }
+            else
+            {
+                var projetos = await _context.UsuarioProjeto
+                    .Where(up => up.UsuarioId == userId)
+                    .Select(up => up.Projeto)
+                    .ToListAsync();
+                ViewData["ProjetoId"] = new SelectList(projetos, "Id", "Nome");
+                ViewBag.ProjetoFixo = false;
+            }
+
             return View(especime);
         }
 
-        // 6. Exclusão
         // GET: Especime/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var especime = await _context.Especimes
+                .Include(e => e.Projeto)
                 .Include(e => e.Especie)
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.CriadorId == userId);
 
             if (especime == null)
                 return NotFound();
@@ -186,18 +297,37 @@ namespace DiarioDeEspecime.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var especime = await _context.Especimes.FindAsync(id);
-            if (especime != null)
-            {
-                _context.Especimes.Remove(especime);
-                await _context.SaveChangesAsync();
-            }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var especime = await _context.Especimes.FirstOrDefaultAsync(e => e.Id == id && e.CriadorId == userId);
+
+            if (especime == null)
+                return NotFound();
+
+            _context.Especimes.Remove(especime);
+            await _context.SaveChangesAsync();
+
+            if (especime.ProjetoId.HasValue)
+                return RedirectToAction(nameof(Index), new { projetoId = especime.ProjetoId });
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<bool> EspecimeExists(int id)
+        // GET: Especime/SelectEspecie
+        public async Task<IActionResult> SelectEspecie(int? projetoId)
         {
-            return await _context.Especimes.AnyAsync(e => e.Id == id);
+            var especies = await _context.Especies.ToListAsync();
+            ViewBag.ProjetoId = projetoId;
+            return View(especies);
         }
+
+        // POST: Especime/SelectEspecie
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SelectEspecie(int especieId, int? projetoId)
+        {
+            if (projetoId.HasValue)
+                return RedirectToAction("Create", new { especieId, projetoId });
+            return RedirectToAction("Create", new { especieId });
+        }
+
     }
 }

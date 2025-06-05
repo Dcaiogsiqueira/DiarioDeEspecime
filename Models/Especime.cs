@@ -71,8 +71,8 @@ namespace DiarioDeEspecime.Models
         [Display(Name = "Data de Cadastro")]
         public DateTime DataCadastro { get; set; } = DateTime.Now;
 
-        public int ProjetoId { get; set; }
-        public Projeto Projeto { get; set; }
+        public int? ProjetoId { get; set; }
+        public Projeto? Projeto { get; set; }
 
     }
 }

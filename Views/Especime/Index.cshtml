@@ -1,59 +1,156 @@
 ﻿@model IEnumerable<DiarioDeEspecime.Models.Especime>
 
 @{
-    ViewData["Title"] = "Lista de Espécimes";
+    ViewData["Title"] = "Espécimes";
+    var search = ViewBag.CurrentFilter as string;
+    var creatorId = ViewBag.CurrentCreator as string;
+    var sortOrder = ViewBag.CurrentSort as string;
+    var creators = ViewBag.Creators as IEnumerable<DiarioDeEspecime.Models.Usuario>;
+    var projetoId = ViewBag.CurrentProjetoId as int?;
+    var projetos = ViewBag.Projetos as IEnumerable<DiarioDeEspecime.Models.Projeto>;
+
+    var inicioDescSelected = sortOrder == "inicio_desc";
+    var inicioAscSelected = sortOrder == "inicio_asc";
+    var terminoDescSelected = sortOrder == "termino_desc";
+    var terminoAscSelected = sortOrder == "termino_asc";
 }
 
-<h2>Lista de Espécimes</h2>
+<h2>Espécimes</h2>
 
 <div class="mb-3">
     <form method="get" class="row g-3">
-        <div class="col-md-4">
-            <input type="text" name="search" class="form-control" placeholder="Buscar por nome popular, nome científico, gênero, pessoa ou local de encontro" />
+        <div class="col-md-3">
+            <input type="text" name="search" class="form-control" placeholder="Buscar por local, espécie ou coletor"
+            value="@search" />
         </div>
-        <div class="col-md-2">
-            <select name="sortOrder" class="form-select">
-                <option value="asc">Ordem Alfabética Crescente</option>
-                <option value="desc">Ordem Alfabética Decrescente</option>
+        <div class="col-md-3">
+            <select name="creatorId" class="form-select">
+                <option value="">Filtrar por Criador</option>
+                @if (creators != null)
+                {
+                    foreach (var criador in creators)
+                    {
+                        if (criador.Id == creatorId)
+                        {
+                            <option value="@criador.Id" selected>@criador.UserName</option>
+                        }
+                        else
+                        {
+                            <option value="@criador.Id">@criador.UserName</option>
+                        }
+                    }
+                }
             </select>
         </div>
+        @if (!projetoId.HasValue && projetos != null)
+        {
+            <div class="col-md-3">
+                <select name="projetoId" class="form-select">
+                    <option value="">Filtrar por Projeto</option>
+                    @foreach (var projeto in projetos)
+                    {
+                        if (projeto.Id.ToString() == (projetoId?.ToString() ?? ""))
+                        {
+                            <option value="@projeto.Id" selected>@projeto.Nome</option>
+                        }
+                        else
+                        {
+                            <option value="@projeto.Id">@projeto.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
         <div class="col-md-2">
+            <select name="sortOrder" class="form-select">
+                @if (inicioDescSelected)
+                {
+                    <option value="inicio_desc" selected>Data de Cadastro (Mais recente)</option>
+                }
+                else
+                {
+                    <option value="inicio_desc">Data de Cadastro (Mais recente)</option>
+                }
+                @if (inicioAscSelected)
+                {
+                    <option value="inicio_asc" selected>Data de Cadastro (Mais antigo)</option>
+                }
+                else
+                {
+                    <option value="inicio_asc">Data de Cadastro (Mais antigo)</option>
+                }
+                @if (terminoDescSelected)
+                {
+                    <option value="termino_desc" selected>Data do Encontro (Mais recente)</option>
+                }
+                else
+                {
+                    <option value="termino_desc">Data do Encontro (Mais recente)</option>
+                }
+                @if (terminoAscSelected)
+                {
+                    <option value="termino_asc" selected>Data do Encontro (Mais antigo)</option>
+                }
+                else
+                {
+                    <option value="termino_asc">Data do Encontro (Mais antigo)</option>
+                }
+            </select>
+
+        </div>
+        <div class="col-md-1">
             <button type="submit" class="btn btn-primary">Filtrar</button>
         </div>
-        <div class="col-md-2">
-            <a asp-action="SelectEspecie" class="btn btn-success">Novo Espécime</a>
+        <div class="col-md-1">
+            @if (projetoId.HasValue)
+            {
+                <a asp-action="SelectEspecie" asp-controller="Especime" asp-route-projetoId="@projetoId" class="btn btn-primary">Novo</a>
+            }
+            else
+            {
+                <a asp-action="SelectEspecie" asp-controller="Especime" class="btn btn-primary">Novo</a>
+            }
         </div>
+
     </form>
 </div>
 
 <table class="table table-striped table-hover">
     <thead class="table-light">
         <tr>
-            <th>Nome Científico</th>
-            <th>Nome Popular</th>
-            <th>Local de Encontro</th>
-            <th>Encontrado por</th>
-            <th>Gênero</th>
+            <th>Espécie</th>
             <th>Sexo</th>
+            <th>Local</th>
+            <th>Coletor</th>
+            <th>Data do Encontro</th>
+            <th>Data de Cadastro</th>
+            @if (!projetoId.HasValue)
+            {
+                <th>Projeto</th>
+            }
+            <th>Criador</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var especime in Model)
         {
             <tr>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <a asp-action="Details" asp-route-id="@especime.Id" class="btn btn-info btn-circle me-2" title="Detalhes">
-                            <i class="fas fa-info"></i>
-                        </a>
-                        <span>@especime.Especie.NomeCientifico</span>
-                    </div>
-                </td>
-                <td>@especime.Especie.NomeEspecie</td>
+                <td>@especime.Especie?.NomeCientifico</td>
+                <td>@especime.Sexo</td>
                 <td>@especime.LocalEncontro</td>
                 <td>@especime.Coletor</td>
-                <td>@especime.Especie.Genero</td>
-                <td>@(especime.Sexo == "Macho" ? "Macho" : especime.Sexo == "Fêmea" ? "Fêmea" : "Indeterminado")</td>
+                <td>@(especime.DataHoraEncontro?.ToString("dd/MM/yyyy") ?? "")</td>
+                <td>@especime.DataCadastro.ToString("dd/MM/yyyy")</td>
+                @if (!projetoId.HasValue)
+                {
+                    <td>@especime.Projeto?.Nome</td>
+                }
+                <td>@especime.Criador?.UserName</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@especime.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@especime.Id" class="btn btn-sm btn-danger">Excluir</a>
+                </td>
             </tr>
         }
     </tbody>

@@ -84,29 +84,34 @@ namespace DiarioDeEspecime.Controllers
             return View();
         }
 
-        // POST: Projeto/Create
-        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Projeto projeto)
         {
-            if (!User.Identity.IsAuthenticated)
-            {
-                return Challenge();
-            }
-
-            var userId = _userManager.GetUserId(User);
-            projeto.CriadorId = userId;
-
-            ModelState.Remove(nameof(projeto.CriadorId));
-
             if (ModelState.IsValid)
             {
-                await _projetoRepository.AddAsync(projeto);
+                // Aqui você já deve ter o userId do usuário logado
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                projeto.CriadorId = userId;
+
+                _context.Projetos.Add(projeto);
+                await _context.SaveChangesAsync();
+
+                // Adiciona o criador como participante
+                var usuarioProjeto = new UsuarioProjeto
+                {
+                    ProjetoId = projeto.Id,
+                    UsuarioId = userId,
+                    Regra = RegraProjeto.Criador // ajuste conforme seu enum
+                };
+                _context.UsuarioProjeto.Add(usuarioProjeto);
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(projeto);
         }
+
 
         // GET: Projeto/Edit/5
         public async Task<IActionResult> Edit(int? id)

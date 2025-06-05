@@ -68,13 +68,16 @@ namespace DiarioDeEspecime.Controllers
         // GET: Edit user in project
         public async Task<IActionResult> Edit(int projetoId, string usuarioId)
         {
-            if (!await UsuarioEhCriadorAsync(projetoId))
-                return Forbid();
             var usuarioProjeto = await _context.UsuarioProjeto
+                .Include(up => up.Projeto)
+                .Include(up => up.Usuario)
                 .FirstOrDefaultAsync(up => up.ProjetoId == projetoId && up.UsuarioId == usuarioId);
 
             if (usuarioProjeto == null)
-                return NotFound();
+            {
+                TempData["Error"] = "Usuário ou projeto não encontrado.";
+                return RedirectToAction(nameof(Index), new { projetoId });
+            }
 
             return View(usuarioProjeto);
         }

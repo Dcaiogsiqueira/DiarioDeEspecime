@@ -13,8 +13,21 @@
         @using (Html.BeginForm("Create", "Especime", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
         {
             @Html.AntiForgeryToken()
-            @Html.HiddenFor(model => model.ProjetoId)
             @Html.HiddenFor(model => model.EspecieId)
+
+            @* Se o projeto for fixo, mantém o campo oculto. Caso contrário, exibe o dropdown *@
+            @if (ViewBag.ProjetoFixo == true)
+            {
+                @Html.HiddenFor(model => model.ProjetoId)
+            }
+            else
+            {
+                <div class="form-group mb-2">
+                    @Html.LabelFor(m => m.ProjetoId, "Projeto")
+                    @Html.DropDownListFor(m => m.ProjetoId, (SelectList)ViewData["ProjetoId"], new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ProjetoId, "", new { @class = "text-danger" })
+                </div>
+            }
 
             <div class="form-group mb-2">
                 <label class="control-label">Espécie Selecionada</label>

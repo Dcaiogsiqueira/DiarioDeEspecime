@@ -1,0 +1,39 @@
+﻿@model DiarioDeEspecime.Models.UsuarioProjeto
+
+@if (ViewData != null)
+{
+    ViewData["Title"] = "Editar Usuário no Projeto";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model == null)
+{
+    <p class="text-danger">Erro: Não foi possível carregar os dados do usuário no projeto.</p>
+}
+else
+{
+    <form asp-action="Edit">
+        <input type="hidden" asp-for="ProjetoId" />
+        <input type="hidden" asp-for="UsuarioId" />
+
+        <div class="form-group">
+            <label>Projeto:</label>
+            <p class="form-control-static">@Model.Projeto.Nome</p>
+        </div>
+
+        <div class="form-group">
+            <label>Usuário:</label>
+            <p class="form-control-static">@Model.Usuario.Nome @Model.Usuario.Sobrenome (@Model.Usuario.Email)</p>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Regra">Regra no Projeto:</label>
+            <select asp-for="Regra" class="form-control" asp-items="Html.GetEnumSelectList<DiarioDeEspecime.Models.RegraProjeto>()"></select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a asp-action="Index" asp-route-projetoId="@Model.ProjetoId" class="btn btn-secondary">Voltar</a>
+    </form>
+}
+
